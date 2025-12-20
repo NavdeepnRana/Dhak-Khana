@@ -114,7 +114,7 @@ export default function RegisterParcel({ onSubmit, isLoading, title = 'Book a Po
           <Input label="Weight (kg)" name="weightKg" value={form.weightKg} onChange={handleChange} type="number" step="0.1" min="0.1" />
           
           {/* Optional Services */}
-          <div className="col-md-6">
+          {/* <div className="col-md-6">
             <label className="form-label">COD Amount (₹) - Optional</label>
             <input
               type="number"
@@ -126,7 +126,7 @@ export default function RegisterParcel({ onSubmit, isLoading, title = 'Book a Po
               min="0"
             />
             <small className="text-muted">2% COD charge will be added</small>
-          </div>
+          </div> */}
           
           <div className="col-md-6">
             <label className="form-label">Optional Services</label>
@@ -202,7 +202,7 @@ export default function RegisterParcel({ onSubmit, isLoading, title = 'Book a Po
             />
           </div>
           <div className="col-12">
-            <button type="submit" className="btn btn-danger d-flex align-items-center gap-2" disabled={isLoading}>
+            <button type="submit" className="btn primary d-flex align-items-center gap-2" disabled={isLoading}>
               <Send size={18} />
               {isLoading ? 'Booking...' : 'Generate Booking'}
             </button>

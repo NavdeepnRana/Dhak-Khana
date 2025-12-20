@@ -125,7 +125,7 @@ function ParcelRow({ parcel, onStatusChange, isUpdating, allowStatusChange, onCa
         <td>
           {parcel.status === 'Pending Approval' && (
             <button
-              className="btn btn-sm btn-outline-danger"
+              className="btn btn-sm primary"
               onClick={() => onCancel && onCancel(parcel.id)}
               disabled={isUpdating}
             >

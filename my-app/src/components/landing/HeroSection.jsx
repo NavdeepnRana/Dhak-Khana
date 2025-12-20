@@ -12,7 +12,6 @@ export default function HeroSection() {
       <div className="container text-dark">
         <div className="row align-items-center g-4">
           <div className="col-lg-7">
-            <span className="badge bg-dark text-white text-uppercase mb-3">Trusted Since 1854</span>
             <h1 className="display-5 fw-bold text-dark">Delivering Letters, Dreams & Digital Bharat</h1>
             <p className="lead mt-3 mb-4 text-dark">
               From Speed Post to Savings, Dak Khana Post brings every government service, financial product, and eCommerce

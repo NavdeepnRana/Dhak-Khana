@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import TrackParcel from '../components/track/TrackParcel';
 import ParcelsTable from '../components/list/ParcelsTable';
@@ -16,9 +16,6 @@ import { useAuth } from '../context/AuthContext';
 import {
   Home,
   Package,
-  Globe,
-  Wallet,
-  ShoppingCart,
   CreditCard,
   MessageSquare,
   User,
@@ -34,6 +31,8 @@ export default function CustomerDashboard() {
   const [showBookingForm, setShowBookingForm] = useState(searchParams.get('action') === 'book');
   const [bookingLoading, setBookingLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('self-booking');
+  const bookingRef = useRef(null);
+  const trackRef = useRef(null);
 
   const loadData = async () => {
     try {
@@ -106,10 +105,6 @@ export default function CustomerDashboard() {
   const portalCards = [
     { key: 'self-booking', label: 'Self Booking' },
     { key: 'my-bookings', label: 'My Bookings' },
-    { key: 'domestic', label: 'Domestic Booking' },
-    { key: 'international', label: 'International Booking' },
-    { key: 'money-order', label: 'Money Order' },
-    { key: 'bulk-booking', label: 'Bulk Booking' },
     { key: 'payment-status', label: 'Payment Status' },
   ];
 
@@ -118,6 +113,28 @@ export default function CustomerDashboard() {
     if (section === 'self-booking') {
       setShowBookingForm(true);
     }
+  };
+
+  const scrollIntoView = (ref) => {
+    if (ref?.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const openBookingForm = () => {
+    setActiveSection('self-booking');
+    setShowBookingForm(true);
+    setTimeout(() => scrollIntoView(bookingRef), 100);
+  };
+
+  const goToTrack = () => {
+    setActiveSection('self-booking');
+    setShowBookingForm(false);
+    setTimeout(() => {
+      if (trackRef?.current) {
+        trackRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   const handleLogout = () => {
@@ -149,11 +166,6 @@ export default function CustomerDashboard() {
           </div>
         </div>
       </header>
-      <div className="crm-bar">
-        <span>Official Postal Portal</span>
-        <span>Helpdesk: 1800-POST</span>
-        <span>Service Hours: 9 AM - 8 PM</span>
-      </div>
 
       <div className="user-body">
         <aside className="user-sidebar">
@@ -174,38 +186,6 @@ export default function CustomerDashboard() {
             >
               <Package size={20} />
               <span className="nav-tooltip">My Bookings</span>
-            </button>
-            <button 
-              className={`icon-nav-btn ${activeSection === 'domestic' ? 'active' : ''}`}
-              onClick={() => handleSidebarClick('domestic')}
-              title="Domestic Booking"
-            >
-              <Package size={20} />
-              <span className="nav-tooltip">Domestic Booking</span>
-            </button>
-            <button 
-              className={`icon-nav-btn ${activeSection === 'international' ? 'active' : ''}`}
-              onClick={() => handleSidebarClick('international')}
-              title="International Booking"
-            >
-              <Globe size={20} />
-              <span className="nav-tooltip">International Booking</span>
-            </button>
-            <button 
-              className={`icon-nav-btn ${activeSection === 'money-order' ? 'active' : ''}`}
-              onClick={() => handleSidebarClick('money-order')}
-              title="Money Order"
-            >
-              <Wallet size={20} />
-              <span className="nav-tooltip">Money Order</span>
-            </button>
-            <button 
-              className={`icon-nav-btn ${activeSection === 'bulk-booking' ? 'active' : ''}`}
-              onClick={() => handleSidebarClick('bulk-booking')}
-              title="Bulk Booking"
-            >
-              <ShoppingCart size={20} />
-              <span className="nav-tooltip">Bulk Booking</span>
             </button>
             <button 
               className={`icon-nav-btn ${activeSection === 'payment-status' ? 'active' : ''}`}
@@ -243,9 +223,11 @@ export default function CustomerDashboard() {
                     <p className="eyebrow">At a glance</p>
                     <h2>Booking & payment status</h2>
                   </div>
-                  <button className="btn primary" onClick={() => setShowBookingForm(true)}>
-                    Start Booking
-                  </button>
+                  <div className="action-row" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button className="btn primary" onClick={openBookingForm}>
+                      Start Booking
+                    </button>
+                  </div>
                 </div>
                 <div className="card-grid">
                   {statCards.map((card) => (
@@ -260,7 +242,7 @@ export default function CustomerDashboard() {
               <section className="card panel">
                 <div className="section-title">Booking & Tracking</div>
                 <div className="portal-grid two-col">
-                  <div className="panel-tile">
+                  <div className="panel-tile" ref={trackRef}>
                     <div className="section-title subtle">Track & timeline</div>
                     <TrackParcel
                       onTrack={handleTrackParcel}
@@ -270,19 +252,14 @@ export default function CustomerDashboard() {
                     />
                   </div>
                   <div className="panel-tile">
-                    <div className="section-title subtle">Suggested Services</div>
-                    <ul className="plain-list">
-                      <li>Speed Post for urgent documents</li>
-                      <li>Logistics for bulky shipments</li>
-                      <li>Money Order for remittances</li>
-                      <li>Bulk Booking for businesses</li>
-                    </ul>
+                    <div className="section-title subtle">Quick Actions</div>
+                    <p className="muted">Create a new booking request or track your existing shipments.</p>
                     <div className="action-row">
-                      <button className="btn ghost" onClick={() => setShowBookingForm(true)}>
-                        View Cart
+                      <button className="btn ghost" onClick={goToTrack}>
+                        Track Parcel
                       </button>
-                      <button className="btn primary" onClick={() => setShowBookingForm(true)}>
-                        Complete Booking
+                      <button className="btn primary" onClick={openBookingForm}>
+                        Start New Booking
                       </button>
                     </div>
                   </div>
@@ -302,7 +279,9 @@ export default function CustomerDashboard() {
                       Cancel
                     </button>
                   </div>
-                  <RegisterParcel onSubmit={handleBookingSubmit} isLoading={bookingLoading} title="Pickup / Dropoff" />
+                  <div ref={bookingRef}>
+                    <RegisterParcel onSubmit={handleBookingSubmit} isLoading={bookingLoading} title="Pickup / Dropoff" />
+                  </div>
                 </section>
               )}
             </>
@@ -315,15 +294,6 @@ export default function CustomerDashboard() {
             </section>
           )}
 
-          {(activeSection === 'domestic' || activeSection === 'international' || activeSection === 'money-order' || activeSection === 'bulk-booking') && (
-            <section className="card panel">
-              <div className="section-title maroon">{portalCards.find(c => c.key === activeSection)?.label || 'Booking'}</div>
-              <p className="muted">This feature is coming soon. Use Self Booking to create a new parcel booking.</p>
-              <button className="btn primary" onClick={() => { setActiveSection('self-booking'); setShowBookingForm(true); }} style={{ marginTop: '12px' }}>
-                Start Booking
-              </button>
-            </section>
-          )}
 
           {activeSection === 'payment-status' && (
             <section className="card panel">
@@ -370,4 +340,5 @@ export default function CustomerDashboard() {
     </div>
   );
 }
+
 

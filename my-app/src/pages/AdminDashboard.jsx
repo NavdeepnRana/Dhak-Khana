@@ -39,6 +39,10 @@ import {
   updateAgent,
   deleteAgent,
   toggleAgentStatus,
+  fetchAllCenters,
+  createCenter,
+  updateCenter,
+  deleteCenter,
 } from '../services/api';
 import { STATUS_OPTIONS, getStatusBadge, getStatusIcon } from '../utils/statusHelpers';
 import { calculatePrice, getServiceMeta } from '../utils/priceCalculator';
@@ -86,9 +90,7 @@ export default function AdminDashboard() {
   const [showParcelForm, setShowParcelForm] = useState(false);
   const [editingParcel, setEditingParcel] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
-  const [centers, setCenters] = useState([
-    { name: 'Head Office', code: 'HO-01', address: 'Connaught Place, New Delhi', contact: '+91-9999999999', serviceArea: 'NCR' },
-  ]);
+  const [centers, setCenters] = useState([]);
   const [centerForm, setCenterForm] = useState({ name: '', code: '', address: '', contact: '', serviceArea: '' });
 
   const [statusModal, setStatusModal] = useState(null);
@@ -125,11 +127,12 @@ export default function AdminDashboard() {
   const loadDashboard = async () => {
     setLoading(true);
     try {
-      const [parcelRes, statsRes, complaintsRes, agentsRes] = await Promise.allSettled([
+      const [parcelRes, statsRes, complaintsRes, agentsRes, centersRes] = await Promise.allSettled([
         fetchAllParcels(),
         fetchAdminStats(),
         fetchComplaints(),
         fetchAllAgents(),
+        fetchAllCenters(),
       ]);
 
       if (parcelRes.status === 'fulfilled') {
@@ -143,6 +146,9 @@ export default function AdminDashboard() {
       }
       if (agentsRes.status === 'fulfilled') {
         setAgents(agentsRes.value);
+      }
+      if (centersRes.status === 'fulfilled') {
+        setCenters(centersRes.value);
       }
     } catch (error) {
       console.error('Dashboard load failed', error);
@@ -165,17 +171,38 @@ export default function AdminDashboard() {
     setCenterForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const addCenter = () => {
+  const addCenter = async () => {
     if (!centerForm.name || !centerForm.code) {
       alert('Center name and code are required');
       return;
     }
-    setCenters((prev) => [...prev, centerForm]);
-    setCenterForm({ name: '', code: '', address: '', contact: '', serviceArea: '' });
+    setSaving(true);
+    try {
+      await createCenter(centerForm);
+      setCenterForm({ name: '', code: '', address: '', contact: '', serviceArea: '' });
+      loadDashboard();
+      alert('Center added successfully');
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to add center');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const removeCenter = (code) => {
-    setCenters((prev) => prev.filter((c) => c.code !== code));
+  const removeCenter = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this center?')) {
+      return;
+    }
+    setSaving(true);
+    try {
+      await deleteCenter(id);
+      loadDashboard();
+      alert('Center deleted successfully');
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to delete center');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const openCreateForm = () => {
@@ -586,7 +613,6 @@ export default function AdminDashboard() {
                 <option>Registered Post</option>
                 <option>Parcel</option>
                 <option>Logistics</option>
-                <option>Money Order</option>
               </select>
               <input
                 type="date"
@@ -845,7 +871,7 @@ export default function AdminDashboard() {
             <div className="info-card">
               {centers.length === 0 && <p className="muted">No centers added yet.</p>}
               {centers.map((center) => (
-                <div key={center.code} className="center-row">
+                <div key={center._id || center.code} className="center-row">
                   <div>
                     <p className="strong">
                       {center.name} ({center.code})
@@ -855,7 +881,7 @@ export default function AdminDashboard() {
                     </small>
                     <div className="muted small">{center.contact}</div>
                   </div>
-                  <button className="icon-btn danger" onClick={() => removeCenter(center.code)}>
+                  <button className="icon-btn danger" onClick={() => removeCenter(center._id)}>
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -893,7 +919,6 @@ export default function AdminDashboard() {
                 <option>Registered Post</option>
                 <option>Parcel</option>
                 <option>Logistics</option>
-                <option>Money Order</option>
               </select>
               <input
                 placeholder="Location filter"
@@ -1221,12 +1246,19 @@ export default function AdminDashboard() {
               </div>
               <div className="form-field">
                 <label>Post Office Center</label>
-                <input
+                <select
                   name="postOfficeCenter"
                   value={formData.postOfficeCenter}
                   onChange={handleInputChange}
-                  placeholder="Center name / code"
-                />
+                >
+                  <option value="">Select Center</option>
+                  {centers.map((center) => (
+                    <option key={center._id || center.code} value={center.name}>
+                      {center.name} ({center.code})
+                    </option>
+                  ))}
+                </select>
+                <small className="muted">Or enter manually if center not in list</small>
               </div>
 
               <div className="form-field">
@@ -1236,7 +1268,6 @@ export default function AdminDashboard() {
                   <option>Registered Post</option>
                   <option>Parcel</option>
                   <option>Logistics</option>
-                  <option>Money Order</option>
                 </select>
               </div>
               <div className="form-field">
@@ -1573,3 +1604,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

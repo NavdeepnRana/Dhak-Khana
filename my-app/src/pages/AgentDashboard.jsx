@@ -43,6 +43,7 @@ export default function AgentDashboard() {
   const [notes, setNotes] = useState('');
   const [proofUrl, setProofUrl] = useState('');
   const [otpCode, setOtpCode] = useState('');
+  const [pickupOtp, setPickupOtp] = useState('');
   const [proofFile, setProofFile] = useState(null);
   const [activeSection, setActiveSection] = useState('home');
   const [selectedParcel, setSelectedParcel] = useState(null);
@@ -57,6 +58,20 @@ export default function AgentDashboard() {
     } catch (error) {
       console.error('Failed to load assigned parcels', error);
       alert('Could not load assigned parcels');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadTodayPickups = async () => {
+    setLoading(true);
+    try {
+      const agentName = user?.name || user?.fullName;
+      const res = await fetchAssignedParcels({ agent: agentName, today: true, pickupOnly: true });
+      return res.map(mapServerParcel);
+    } catch (error) {
+      console.error('Failed to load today pickups', error);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -93,9 +108,11 @@ export default function AgentDashboard() {
       return d.toDateString() === today.toDateString();
     };
     return parcels.filter((p) => 
-      sameDay(p.pickupDate) || ['Pending Approval', 'Booked'].includes(p.status)
+      p.pickupMode === 'Pickup' && 
+      (sameDay(p.pickupDate) || ['Pending Approval', 'Booked'].includes(p.status)) &&
+      p.sourceCity === (user?.assignedCity || p.sourceCity)
     );
-  }, [parcels]);
+  }, [parcels, user]);
 
   const todayDeliveries = useMemo(() => {
     return parcels.filter((p) => 
@@ -108,6 +125,7 @@ export default function AgentDashboard() {
     setNotes(remark || '');
     setProofUrl('');
     setOtpCode('');
+    setPickupOtp('');
     handleStatusChange(parcel.id, nextStatus, remark);
   };
 
@@ -115,12 +133,13 @@ export default function AgentDashboard() {
     setUpdating(true);
     try {
       const finalNotes = noteOverride || notes || (otpCode ? `OTP: ${otpCode}` : '');
-      await updateParcelStatus(parcelId, status, finalNotes, proofUrl);
+      await updateParcelStatus(parcelId, status, finalNotes, proofUrl, pickupOtp);
       setActiveParcel(null);
       setSelectedParcel(null);
       setNotes('');
       setProofUrl('');
       setOtpCode('');
+      setPickupOtp('');
       setProofFile(null);
       await loadParcels();
       alert('Status updated successfully!');
@@ -360,7 +379,22 @@ export default function AgentDashboard() {
                     </div>
                   </div>
                   <div className="task-actions">
-                    <button className="btn ghost" onClick={() => handleQuickAction(parcel, 'Picked Up')}>
+                    <button 
+                      className="btn ghost" 
+                      onClick={() => { 
+                        setActiveParcel(parcel); 
+                        setSelectedParcel(parcel);
+                        if (parcel.pickupMode === 'Pickup' && parcel.pickupOtp) {
+                          const otp = prompt('Enter pickup OTP from customer:');
+                          if (otp) {
+                            setPickupOtp(otp);
+                            handleStatusChange(parcel.id, 'Picked Up');
+                          }
+                        } else {
+                          handleQuickAction(parcel, 'Picked Up');
+                        }
+                      }}
+                    >
                       <Package size={14} />
                       Mark as Picked Up
                     </button>
@@ -453,6 +487,19 @@ export default function AgentDashboard() {
                   placeholder="Add remarks like: Customer not available, Incorrect address, Delivery rescheduled, etc."
                 />
               </div>
+              {activeParcel?.pickupMode === 'Pickup' && activeParcel?.pickupOtp && (
+                <div className="form-field">
+                  <label>Pickup OTP (Required)</label>
+                  <input 
+                    type="text"
+                    value={pickupOtp} 
+                    onChange={(e) => setPickupOtp(e.target.value)} 
+                    placeholder="Enter pickup OTP from customer" 
+                    required
+                  />
+                  <small className="muted">Customer must provide this OTP for pickup verification</small>
+                </div>
+              )}
               <div className="form-field">
                 <label>Delivery OTP</label>
                 <input 
@@ -492,7 +539,13 @@ export default function AgentDashboard() {
               </button>
               <button
                 className="btn primary"
-                onClick={() => handleStatusChange(activeParcel.id, activeParcel.status)}
+                onClick={() => {
+                  if (activeParcel.pickupMode === 'Pickup' && activeParcel.pickupOtp && !pickupOtp && activeParcel.status === 'Picked Up') {
+                    alert('Pickup OTP is required for pickup requests');
+                    return;
+                  }
+                  handleStatusChange(activeParcel.id, activeParcel.status);
+                }}
                 disabled={updating}
               >
                 Save Notes
@@ -504,3 +557,4 @@ export default function AgentDashboard() {
     </div>
   );
 }
+

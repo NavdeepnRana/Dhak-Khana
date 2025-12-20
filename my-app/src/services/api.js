@@ -61,6 +61,7 @@ export const fetchAssignedParcels = async (options = {}) => {
   const params = new URLSearchParams();
   if (options.today) params.append('today', 'true');
   if (options.agent) params.append('agent', options.agent);
+  if (options.pickupOnly) params.append('pickupOnly', 'true');
   const query = params.toString() ? `?${params.toString()}` : '';
   const { data } = await api.get(`/parcels/assigned${query}`);
   return data;
@@ -153,8 +154,8 @@ export const toggleAgentStatus = async (id) => {
   return data;
 };
 
-export const updateParcelStatus = async (id, status, notes, proofUrl) => {
-  const { data } = await api.patch(`/parcels/${id}/status`, { status, notes, proofUrl });
+export const updateParcelStatus = async (id, status, notes, proofUrl, pickupOtp) => {
+  const { data } = await api.patch(`/parcels/${id}/status`, { status, notes, proofUrl, pickupOtp });
   return data;
 };
 
@@ -170,6 +171,27 @@ export const deleteParcel = async (id) => {
 
 export const cancelBookingRequest = async (id) => {
   const { data } = await api.patch(`/parcels/${id}/cancel`);
+  return data;
+};
+
+// Post Office Center APIs
+export const fetchAllCenters = async () => {
+  const { data } = await api.get('/centers');
+  return data;
+};
+
+export const createCenter = async (payload) => {
+  const { data } = await api.post('/centers', payload);
+  return data;
+};
+
+export const updateCenter = async (id, payload) => {
+  const { data } = await api.put(`/centers/${id}`, payload);
+  return data;
+};
+
+export const deleteCenter = async (id) => {
+  const { data } = await api.delete(`/centers/${id}`);
   return data;
 };
 
@@ -200,4 +222,5 @@ export function mapServerParcel(parcel) {
     badgeClass: getStatusBadge(parcel.status),
   };
 }
+
 

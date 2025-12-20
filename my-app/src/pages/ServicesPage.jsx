@@ -39,28 +39,6 @@ const services = [
     maxWeight: 20,
     weightUnit: 'kg',
   },
-  {
-    id: 'export-ems',
-    title: 'Export EMS',
-    description: 'Express Mail Service for international shipments with customs clearance support.',
-    icon: Package,
-    turnaround: '5-10 days',
-    basePrice: 500,
-    pricePerKg: 200,
-    maxWeight: 30,
-    weightUnit: 'kg',
-  },
-  {
-    id: 'airmail',
-    title: 'Airmail',
-    description: 'International airmail service for documents and small parcels worldwide.',
-    icon: Package,
-    turnaround: '7-15 days',
-    basePrice: 300,
-    pricePerKg: 150,
-    maxWeight: 2,
-    weightUnit: 'kg',
-  },
 ];
 
 export default function ServicesPage() {
@@ -198,4 +176,5 @@ export default function ServicesPage() {
     </div>
   );
 }
+
 

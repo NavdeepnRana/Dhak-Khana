@@ -25,7 +25,7 @@ export default function TrackParcel({ onTrack, result, isLoading, error, variant
             />
           </div>
           <div className="col-md-4 d-grid">
-            <button type="submit" className="btn btn-danger btn-lg" disabled={isLoading}>
+            <button type="submit" className="btn primary btn-lg" disabled={isLoading}>
               <Search size={18} className="me-2" />
               {isLoading ? 'Searching...' : 'Track Parcel'}
             </button>

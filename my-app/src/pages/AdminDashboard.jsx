@@ -46,6 +46,9 @@ import {
 } from '../services/api';
 import { STATUS_OPTIONS, getStatusBadge, getStatusIcon } from '../utils/statusHelpers';
 import { calculatePrice, getServiceMeta } from '../utils/priceCalculator';
+import AdminAgentAreaMap from '../components/maps/AdminAgentAreaMap';
+import LocationAutocomplete from '../components/maps/LocationAutocomplete';
+import PostOfficeAutocomplete from '../components/maps/PostOfficeAutocomplete';
 
 const emptyForm = {
   senderName: '',
@@ -91,7 +94,7 @@ export default function AdminDashboard() {
   const [editingParcel, setEditingParcel] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
   const [centers, setCenters] = useState([]);
-  const [centerForm, setCenterForm] = useState({ name: '', code: '', address: '', contact: '', serviceArea: '' });
+  const [centerForm, setCenterForm] = useState({ name: '', code: '', address: '', contact: '', serviceArea: '', city: '', pincode: '' });
 
   const [statusModal, setStatusModal] = useState(null);
   const [reportFilters, setReportFilters] = useState({ status: 'all', service: 'all', location: '', from: '', to: '' });
@@ -178,12 +181,17 @@ export default function AdminDashboard() {
     }
     setSaving(true);
     try {
-      await createCenter(centerForm);
-      setCenterForm({ name: '', code: '', address: '', contact: '', serviceArea: '' });
-      loadDashboard();
-      alert('Center added successfully');
+      const result = await createCenter(centerForm);
+      setCenterForm({ name: '', code: '', address: '', contact: '', serviceArea: '', city: '', pincode: '' });
+      await loadDashboard();
+      alert(result?.message || 'Center added successfully');
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to add center');
+      console.error('Error adding center:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Failed to add center. Please check all fields and try again.';
+      alert(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -257,15 +265,21 @@ export default function AdminDashboard() {
         weightKg: Number(formData.weightKg),
         costInr: calculatedPrice,
         codAmount: formData.codAmount ? Number(formData.codAmount) : undefined,
+        // Ensure all required fields are present
+        senderName: formData.senderName || '',
+        receiverName: formData.receiverName || '',
+        sourceCity: formData.sourceCity || '',
+        destinationCity: formData.destinationCity || '',
       };
+      
       if (editingParcel) {
-        await updateParcel(editingParcel.id, payload);
-        alert('Shipment updated successfully');
+        const result = await updateParcel(editingParcel.id, payload);
+        alert(result?.message || 'Shipment updated successfully');
       } else {
         const res = await createParcel(payload);
         alert(
           `Shipment booked successfully!\nRequest ID: ${res.parcel?.requestId || 'N/A'}\nTracking ID: ${
-            res.trackingId
+            res.trackingId || 'N/A'
           }\n\nTracking ID has been sent to customer email if provided.`
         );
       }
@@ -274,21 +288,53 @@ export default function AdminDashboard() {
       setFormData(emptyForm);
       loadDashboard();
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to save shipment');
+      console.error('Error saving parcel:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Failed to save shipment. Please check all fields and try again.';
+      alert(errorMessage);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleStatusUpdate = async (parcelId, status) => {
+  const handleStatusUpdate = async (parcelId, status, notes = '', proofUrl = '', pickupOtp = '') => {
+    if (!parcelId || !status) {
+      alert('Missing required information. Please try again.');
+      return;
+    }
+    
     setSaving(true);
     try {
-      await updateParcelStatus(parcelId, status);
-      alert('Status updated and tracking/email handled automatically.');
+      const result = await updateParcelStatus(parcelId, status, notes, proofUrl, pickupOtp);
+      alert(result?.message || 'Status updated successfully!');
       setStatusModal(null);
-      loadDashboard();
+      await loadDashboard();
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to update status');
+      console.error('Error updating status:', error);
+      console.error('Error details:', {
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+      });
+      
+      let errorMessage = 'Failed to update status. Please try again.';
+      
+      if (error.response) {
+        // Server responded with error
+        errorMessage = error.response.data?.message || 
+                      error.response.data?.error || 
+                      `Server error: ${error.response.status} ${error.response.statusText}`;
+      } else if (error.request) {
+        // Request was made but no response received
+        errorMessage = 'No response from server. Please check your connection.';
+      } else {
+        // Error in request setup
+        errorMessage = error.message || 'An unexpected error occurred.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -513,6 +559,7 @@ export default function AdminDashboard() {
             { key: 'overview', label: 'Dashboard', icon: BarChart3 },
             { key: 'parcels', label: 'Parcel Management', icon: Package },
             { key: 'agents', label: 'Delivery Agents', icon: Users },
+            { key: 'agent-areas', label: 'Agent Areas', icon: MapPin },
             { key: 'pickup', label: 'Pickup Requests', icon: ClipboardList },
             { key: 'delivery', label: 'Delivery Status', icon: Truck },
             { key: 'reports', label: 'Reports', icon: FileText },
@@ -793,6 +840,29 @@ export default function AdminDashboard() {
           </section>
         )}
 
+        {activeSection === 'agent-areas' && (
+          <section className="card panel">
+            <div className="panel-header">
+              <div>
+                <p className="eyebrow">Zone Management</p>
+                <h2>Agent Area Assignment</h2>
+              </div>
+            </div>
+            <div style={{ padding: '20px' }}>
+              <AdminAgentAreaMap
+                city="Delhi"
+                onAreaClick={(area) => {
+                  console.log('Area clicked:', area);
+                }}
+                onAgentAssign={(areaId, agentName) => {
+                  console.log('Assigning agent:', agentName, 'to area:', areaId);
+                  alert(`Agent ${agentName} assigned to area ${areaId}`);
+                }}
+              />
+            </div>
+          </section>
+        )}
+
         {activeSection === 'pickup' && (
         <section className="card panel two-col">
           <div>
@@ -819,11 +889,12 @@ export default function AdminDashboard() {
               </div>
               <div className="form-field">
                 <label>Post Office Center</label>
-                <input
+                <PostOfficeAutocomplete
                   name="postOfficeCenter"
-                  placeholder="Branch code / address"
                   value={formData.postOfficeCenter}
                   onChange={handleInputChange}
+                  placeholder="Search post office (e.g., type 'del' for Delhi)..."
+                  className="form-control"
                 />
               </div>
               <div className="form-field">
@@ -857,6 +928,20 @@ export default function AdminDashboard() {
               <div className="form-field">
                 <label>Contact</label>
                 <input name="contact" value={centerForm.contact} onChange={handleCenterChange} placeholder="Phone / email" />
+              </div>
+              <div className="form-field">
+                <label>City</label>
+                <LocationAutocomplete
+                  name="city"
+                  value={centerForm.city}
+                  onChange={handleCenterChange}
+                  placeholder="Enter city"
+                  className="form-control"
+                />
+              </div>
+              <div className="form-field">
+                <label>Pincode</label>
+                <input name="pincode" value={centerForm.pincode} onChange={handleCenterChange} placeholder="e.g. 110001" />
               </div>
               <div className="form-field full">
                 <label>Address</label>
@@ -1198,7 +1283,14 @@ export default function AdminDashboard() {
 
               <div className="form-field">
                 <label>Source City</label>
-                <input name="sourceCity" value={formData.sourceCity} onChange={handleInputChange} required />
+                <LocationAutocomplete
+                  name="sourceCity"
+                  value={formData.sourceCity}
+                  onChange={handleInputChange}
+                  placeholder="Enter source city"
+                  className="form-control"
+                  required
+                />
               </div>
               <div className="form-field">
                 <label>Source Pincode</label>
@@ -1212,10 +1304,12 @@ export default function AdminDashboard() {
 
               <div className="form-field">
                 <label>Destination City</label>
-                <input
+                <LocationAutocomplete
                   name="destinationCity"
                   value={formData.destinationCity}
                   onChange={handleInputChange}
+                  placeholder="Enter destination city"
+                  className="form-control"
                   required
                 />
               </div>
@@ -1246,19 +1340,14 @@ export default function AdminDashboard() {
               </div>
               <div className="form-field">
                 <label>Post Office Center</label>
-                <select
+                <PostOfficeAutocomplete
                   name="postOfficeCenter"
                   value={formData.postOfficeCenter}
                   onChange={handleInputChange}
-                >
-                  <option value="">Select Center</option>
-                  {centers.map((center) => (
-                    <option key={center._id || center.code} value={center.name}>
-                      {center.name} ({center.code})
-                    </option>
-                  ))}
-                </select>
-                <small className="muted">Or enter manually if center not in list</small>
+                  placeholder="Search post office (e.g., type 'del' for Delhi)..."
+                  className="form-control"
+                />
+                <small className="muted">Type to search and select from available centers</small>
               </div>
 
               <div className="form-field">
@@ -1604,4 +1693,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-

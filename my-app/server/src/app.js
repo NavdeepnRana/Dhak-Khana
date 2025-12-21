@@ -8,6 +8,7 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const infoRoutes = require('./routes/infoRoutes');
 const feedbackRoutes = require('./routes/feedbackRoutes');
 const agentRoutes = require('./routes/agentRoutes');
+const centerRoutes = require('./routes/centerRoutes');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 function createApp() {
@@ -27,6 +28,7 @@ function createApp() {
   app.use('/api/parcels', parcelRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/feedback', feedbackRoutes);
+  app.use('/api/centers', centerRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

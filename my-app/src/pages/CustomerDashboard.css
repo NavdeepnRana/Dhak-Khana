@@ -13,6 +13,10 @@
   color: var(--user-text);
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .user-header {
@@ -67,6 +71,9 @@
   gap: 16px;
   padding: 20px 24px 28px;
   flex: 1;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .user-sidebar {
@@ -173,6 +180,9 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-width: 0;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .portal-cards {
@@ -321,11 +331,318 @@
   margin-bottom: 10px;
 }
 
+/* Table and form responsiveness */
+.panel table {
+  width: 100%;
+  table-layout: auto;
+}
+
+.panel .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure all content fits */
+.panel * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.panel img,
+.panel iframe,
+.panel video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Bootstrap table responsiveness */
+.table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 @media (max-width: 960px) {
-  .user-body {
-    grid-template-columns: 1fr;
+  .table-responsive {
+    border: 0;
   }
-  .user-shell {
-    padding-bottom: 18px;
+  
+  .table-responsive table {
+    font-size: 14px;
+  }
+  
+  .table-responsive th,
+  .table-responsive td {
+    padding: 8px 6px;
+    white-space: nowrap;
+  }
+  
+  .table-responsive th:first-child,
+  .table-responsive td:first-child {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 1;
   }
 }
+
+@media (max-width: 640px) {
+  .table-responsive {
+    font-size: 12px;
+  }
+  
+  .table-responsive th,
+  .table-responsive td {
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+  
+  /* Hide less important columns on mobile */
+  .table-responsive th:nth-child(n+5),
+  .table-responsive td:nth-child(n+5) {
+    display: none;
+  }
+  
+  /* Show essential columns */
+  .table-responsive th:nth-child(1),
+  .table-responsive td:nth-child(1),
+  .table-responsive th:nth-child(2),
+  .table-responsive td:nth-child(2),
+  .table-responsive th:nth-child(11),
+  .table-responsive td:nth-child(11) {
+    display: table-cell;
+  }
+}
+
+@media (max-width: 960px) {
+  .user-shell {
+    width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .user-body {
+    grid-template-columns: 1fr;
+    padding: 12px 16px;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .user-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .user-header > div:last-child {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .user-header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .profile-pill {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .user-sidebar {
+    order: -1;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .icon-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .icon-nav-btn {
+    flex: 1 1 auto;
+    min-width: calc(50% - 3px);
+    max-width: calc(50% - 3px);
+    padding: 10px 8px;
+  }
+  
+  .nav-tooltip {
+    display: none;
+  }
+  
+  .user-main {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .panel {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+  
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+  }
+  
+  .portal-grid.two-col {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .action-row {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 8px;
+  }
+  
+  .action-row .btn {
+    flex: 1 1 auto;
+    min-width: calc(50% - 4px);
+  }
+  
+  .section-title {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+  
+  h2, h3 {
+    font-size: 1.25rem;
+    word-wrap: break-word;
+  }
+}
+
+@media (max-width: 640px) {
+  .user-shell {
+    width: 100vw;
+    overflow-x: hidden;
+    position: relative;
+  }
+  
+  .user-body {
+    padding: 8px 12px;
+    gap: 10px;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+  
+  .user-header {
+    padding: 10px 12px;
+  }
+  
+  .brand {
+    font-size: 16px;
+  }
+  
+  .user-sidebar {
+    padding: 12px;
+  }
+  
+  .icon-nav-btn {
+    min-width: calc(50% - 3px);
+    padding: 8px 6px;
+    font-size: 12px;
+  }
+  
+  .icon-nav-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .stat-card {
+    padding: 10px;
+  }
+  
+  .panel {
+    padding: 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .section-title {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+  
+  .section-head h2 {
+    font-size: 1.1rem;
+  }
+  
+  .user-main {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .action-row .btn {
+    min-width: 100%;
+    width: 100%;
+  }
+  
+  .profile-pill {
+    padding: 6px 10px;
+  }
+  
+  .avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  .profile-pill > div {
+    font-size: 12px;
+  }
+  
+  .profile-pill .strong {
+    font-size: 13px;
+  }
+  
+  .profile-pill .muted.small {
+    font-size: 11px;
+  }
+  
+  /* Ensure tables and forms don't overflow */
+  .panel table,
+  .panel .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+  }
+  
+  .panel form {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .panel input,
+  .panel select,
+  .panel textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+

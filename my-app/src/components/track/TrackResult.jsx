@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar, DollarSign, MapPin, Package as PackageIcon, Phone, User } from 'lucide-react';
 import { getStatusBadge, getStatusIcon } from '../../utils/statusHelpers';
+import ParcelTrackingMap from '../maps/ParcelTrackingMap';
 
 export default function TrackResult({ parcel }) {
   const StatusIcon = getStatusIcon(parcel.status);
@@ -29,6 +30,12 @@ export default function TrackResult({ parcel }) {
           <InfoCard label="Booked on" value={new Date(parcel.createdAt).toLocaleString()} icon={Calendar} />
           <InfoCard label="Expected delivery" value={parcel.expectedDelivery} icon={Calendar} />
         </div>
+        
+        {/* Parcel Tracking Map */}
+        <div className="mt-4">
+          <h5 className="mb-3">📍 Parcel Location Tracking</h5>
+          <ParcelTrackingMap parcel={parcel} />
+        </div>
       </div>
     </div>
   );
@@ -49,4 +56,5 @@ function InfoCard({ label, value, icon: Icon }) {
     </div>
   );
 }
+
 

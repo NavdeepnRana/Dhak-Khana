@@ -154,8 +154,13 @@ export const toggleAgentStatus = async (id) => {
   return data;
 };
 
-export const updateParcelStatus = async (id, status, notes, proofUrl, pickupOtp) => {
-  const { data } = await api.patch(`/parcels/${id}/status`, { status, notes, proofUrl, pickupOtp });
+export const updateParcelStatus = async (id, status, notes = '', proofUrl = '', pickupOtp = '') => {
+  const payload = { status };
+  if (notes) payload.notes = notes;
+  if (proofUrl) payload.proofUrl = proofUrl;
+  if (pickupOtp) payload.pickupOtp = pickupOtp;
+  
+  const { data } = await api.patch(`/parcels/${id}/status`, payload);
   return data;
 };
 
@@ -177,6 +182,11 @@ export const cancelBookingRequest = async (id) => {
 // Post Office Center APIs
 export const fetchAllCenters = async () => {
   const { data } = await api.get('/centers');
+  return data;
+};
+
+export const searchCenters = async (query) => {
+  const { data } = await api.get(`/centers/search?q=${encodeURIComponent(query)}`);
   return data;
 };
 
@@ -222,5 +232,6 @@ export function mapServerParcel(parcel) {
     badgeClass: getStatusBadge(parcel.status),
   };
 }
+
 
 

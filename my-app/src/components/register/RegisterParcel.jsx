@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Send, Calculator, Clock } from 'lucide-react';
+import { Send, Calculator, Clock, MapPin } from 'lucide-react';
 import { calculatePrice, getServiceMeta } from '../../utils/priceCalculator';
+import NearbyPostOfficeMap from '../maps/NearbyPostOfficeMap';
+import LocationAutocomplete from '../maps/LocationAutocomplete';
 
 const initialForm = {
   senderName: '',
@@ -38,6 +40,8 @@ const paymentOptions = ['Cash', 'UPI', 'Net Banking', 'Card'];
 
 export default function RegisterParcel({ onSubmit, isLoading, title = 'Book a Postal Article' }) {
   const [form, setForm] = useState(initialForm);
+  const [showPostOfficeMap, setShowPostOfficeMap] = useState(false);
+  const [selectedPostOffice, setSelectedPostOffice] = useState(null);
 
   const priceEstimate = useMemo(() => {
     const calculatedPrice = calculatePrice(form);
@@ -63,13 +67,22 @@ export default function RegisterParcel({ onSubmit, isLoading, title = 'Book a Po
       return;
     }
     
-    // Add calculated price to form data
+    // Add calculated price and selected post office to form data
     const formDataWithPrice = {
       ...form,
       costInr: finalPrice,
+      postOfficeCenter: selectedPostOffice?.code || form.postOfficeCenter || '',
     };
     
-    onSubmit(formDataWithPrice, () => setForm(initialForm));
+    onSubmit(formDataWithPrice, () => {
+      setForm(initialForm);
+      setSelectedPostOffice(null);
+    });
+  };
+
+  const handleSelectOffice = (office) => {
+    setSelectedPostOffice(office);
+    setForm(prev => ({ ...prev, postOfficeCenter: office.code }));
   };
 
   return (
@@ -82,9 +95,29 @@ export default function RegisterParcel({ onSubmit, isLoading, title = 'Book a Po
           <Input label="Sender Phone" name="senderPhone" value={form.senderPhone} onChange={handleChange} />
           <Input label="Receiver Name" name="receiverName" value={form.receiverName} onChange={handleChange} />
           <Input label="Receiver Phone" name="receiverPhone" value={form.receiverPhone} onChange={handleChange} />
-          <Input label="Source City" name="sourceCity" value={form.sourceCity} onChange={handleChange} />
+          <div className="col-md-6">
+            <label className="form-label">Source City</label>
+            <LocationAutocomplete
+              name="sourceCity"
+              value={form.sourceCity}
+              onChange={handleChange}
+              placeholder="Enter source city"
+              className="form-control"
+              required
+            />
+          </div>
           <Input label="Source Pincode" name="sourcePincode" value={form.sourcePincode} onChange={handleChange} placeholder="e.g. 110001" />
-          <Input label="Destination City" name="destinationCity" value={form.destinationCity} onChange={handleChange} />
+          <div className="col-md-6">
+            <label className="form-label">Destination City</label>
+            <LocationAutocomplete
+              name="destinationCity"
+              value={form.destinationCity}
+              onChange={handleChange}
+              placeholder="Enter destination city"
+              className="form-control"
+              required
+            />
+          </div>
           <Input label="Destination Pincode" name="destinationPincode" value={form.destinationPincode} onChange={handleChange} placeholder="e.g. 400001" />
           <Select label="Service Type" name="serviceType" value={form.serviceType} onChange={handleChange} options={serviceOptions} />
           <Select label="Package Type" name="packageType" value={form.packageType} onChange={handleChange} options={packageOptions} />
@@ -190,6 +223,41 @@ export default function RegisterParcel({ onSubmit, isLoading, title = 'Book a Po
             onChange={handleChange}
             options={paymentOptions}
           />
+          
+          {/* Post Office Selection */}
+          <div className="col-12">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <label className="form-label">Select Post Office (Optional)</label>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => setShowPostOfficeMap(!showPostOfficeMap)}
+              >
+                <MapPin size={14} className="me-1" />
+                {showPostOfficeMap ? 'Hide Map' : 'Find Nearby Post Offices'}
+              </button>
+            </div>
+            {selectedPostOffice && (
+              <div className="alert alert-info mb-2">
+                <strong>Selected:</strong> {selectedPostOffice.name} ({selectedPostOffice.code}) - {selectedPostOffice.distance.toFixed(2)} km away
+              </div>
+            )}
+            {showPostOfficeMap && (
+              <div className="mb-3" style={{ 
+                border: '1px solid #e0e0e0', 
+                borderRadius: '8px', 
+                overflow: 'hidden',
+                width: '100%',
+                maxWidth: '100%'
+              }}>
+                <NearbyPostOfficeMap 
+                  onSelectOffice={handleSelectOffice}
+                  selectedOffice={selectedPostOffice}
+                />
+              </div>
+            )}
+          </div>
+
           <div className="col-12">
             <label className="form-label">Special Instructions</label>
             <textarea
@@ -244,4 +312,5 @@ function Select({ label, name, value, onChange, options }) {
     </div>
   );
 }
+
 

@@ -21,6 +21,7 @@ import {
 import './AgentDashboard.css';
 import { useAuth } from '../context/AuthContext';
 import { fetchAssignedParcels, mapServerParcel, updateParcelStatus } from '../services/api';
+import PickupBoyNavigationMap from '../components/maps/PickupBoyNavigationMap';
 
 const AGENT_STATUSES = [
   'Picked Up',
@@ -343,14 +344,6 @@ export default function AgentDashboard() {
                       <div className="muted small">
                         <MapPin size={12} /> {parcel.sourceCity}
                       </div>
-                      <button 
-                        className="btn ghost" 
-                        style={{ marginTop: '4px', padding: '4px 8px', fontSize: '12px' }}
-                        onClick={() => handleNavigate(`${parcel.sourceCity}`)}
-                      >
-                        <Navigation size={12} />
-                        Navigate
-                      </button>
                     </div>
                     <div>
                       <p className="strong">Recipient</p>
@@ -358,14 +351,6 @@ export default function AgentDashboard() {
                       <div className="muted small">
                         <MapPin size={12} /> {parcel.destinationCity}
                       </div>
-                      <button 
-                        className="btn ghost" 
-                        style={{ marginTop: '4px', padding: '4px 8px', fontSize: '12px' }}
-                        onClick={() => handleNavigate(`${parcel.destinationCity}`)}
-                      >
-                        <Navigation size={12} />
-                        Navigate
-                      </button>
                     </div>
                     <div>
                       <p className="strong">Weight</p>
@@ -378,6 +363,17 @@ export default function AgentDashboard() {
                       <div className="chip secondary">{parcel.status}</div>
                     </div>
                   </div>
+                  {/* Navigation Map for Pickup/Delivery */}
+                  {selectedParcel?.id === parcel.id && (
+                    <div style={{ marginTop: '16px', marginBottom: '16px', border: '1px solid #e0e0e0', borderRadius: '8px', overflow: 'hidden' }}>
+                      <PickupBoyNavigationMap
+                        address={activeSection === 'pickups' ? parcel.sourceCity : parcel.destinationCity}
+                        city={activeSection === 'pickups' ? parcel.sourceCity : parcel.destinationCity}
+                        type={activeSection === 'pickups' ? 'pickup' : 'delivery'}
+                      />
+                    </div>
+                  )}
+
                   <div className="task-actions">
                     <button 
                       className="btn ghost" 
@@ -402,9 +398,12 @@ export default function AgentDashboard() {
                       <CheckCircle size={14} />
                       Mark as Delivered
                     </button>
-                    <button className="btn primary" onClick={() => { setActiveParcel(parcel); setSelectedParcel(parcel); }}>
+                    <button className="btn primary" onClick={() => { 
+                      setActiveParcel(parcel); 
+                      setSelectedParcel(selectedParcel?.id === parcel.id ? null : parcel);
+                    }}>
                       <FileText size={14} />
-                      Update Status
+                      {selectedParcel?.id === parcel.id ? 'Hide Map' : 'Show Map & Update'}
                     </button>
                     <button 
                       className="btn ghost" 
@@ -557,4 +556,5 @@ export default function AgentDashboard() {
     </div>
   );
 }
+
 

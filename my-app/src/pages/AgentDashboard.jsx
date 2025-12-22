@@ -500,22 +500,22 @@ export default function AgentDashboard() {
                 </div>
               )}
               <div className="form-field">
-                <label>Delivery OTP</label>
-                <input 
+                {/* <label>Delivery OTP</label> */}
+                {/* <input 
                   type="text"
                   value={otpCode} 
                   onChange={(e) => setOtpCode(e.target.value)} 
                   placeholder="Enter OTP from customer" 
-                />
+                /> */}
               </div>
               <div className="form-field">
-                <label>Proof of Delivery (Upload)</label>
+                {/* <label>Proof of Delivery (Upload)</label>
                 <input 
                   type="file" 
                   accept="image/*"
                   onChange={handleFileUpload}
                   style={{ padding: '8px' }}
-                />
+                /> */}
                 {proofFile && (
                   <div className="muted small" style={{ marginTop: '4px' }}>
                     Selected: {proofFile.name}

@@ -36,7 +36,7 @@ const pickupSlots = [
 
 const serviceOptions = ['Speed Post', 'Registered Post', 'Parcel', 'Logistics', 'Money Order'];
 const packageOptions = ['Document', 'Parcel', 'Fragile', 'High Value'];
-const paymentOptions = ['Cash', 'UPI', 'Net Banking', 'Card'];
+const paymentOptions = ['Cash'];
 
 export default function RegisterParcel({ onSubmit, isLoading, title = 'Book a Postal Article' }) {
   const [form, setForm] = useState(initialForm);

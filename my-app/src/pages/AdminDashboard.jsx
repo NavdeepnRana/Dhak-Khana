@@ -1609,16 +1609,16 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="form-field">
-                  <label>Agent ID {!editingAgent && '(Auto-generated if empty)'}</label>
-                  <input
+                  {/* <label>Agent ID {!editingAgent && '(Auto-generated if empty)'}</label> */}
+                  {/* <input
                     name="agentId"
                     value={agentForm.agentId}
                     onChange={handleAgentInputChange}
                     placeholder="Leave empty for auto-generation"
                     disabled={!!editingAgent}
-                  />
+                  /> */}
                 </div>
-                <div className="form-field">
+                {/* <div className="form-field">
                   <label>Hub</label>
                   <input
                     name="hub"
@@ -1626,7 +1626,7 @@ export default function AdminDashboard() {
                     onChange={handleAgentInputChange}
                     placeholder="Hub name"
                   />
-                </div>
+                </div> */}
 
                 {!editingAgent && (
                   <div className="form-field full">
